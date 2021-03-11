@@ -1,8 +1,5 @@
 .container {
-  font-family: "Lato", sans-serif;
-  max-width: 1024px;
-  margin-left: auto;
+  width: 1024px;
   margin-right: auto;
-  padding-left: 15px;
-  padding-right: 15px;
+  margin-left: auto;
 }

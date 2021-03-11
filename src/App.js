@@ -1,12 +1,13 @@
 import "./App.css";
 import React from "react";
-import Searchbar from "./components/Searchbar";
+import Searchbar from "./components/Searchbar/Searchbar";
 import Container from "./components/Container";
-import ImageGallery from "./components/ImageGallery";
-import Button from "./components/Button";
+import ImageGallery from "./components/ImageGallery/ImageGallery";
+import Button from "./components/Button/Button";
 import getImages from "./utils/ApiServices";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import Loader from "react-loader-spinner";
+import Modal from "./components/Modal";
 
 class App extends React.Component {
   state = {
@@ -14,6 +15,8 @@ class App extends React.Component {
     currentPage: 1,
     currentQuery: "",
     needLoader: false,
+    showModal: false,
+    modalImg: "",
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -32,7 +35,6 @@ class App extends React.Component {
   }
 
   handleSearchSubmit = (value) => {
-    console.log('handleSearchSubmit', this.state.needLoader);
     this.setState({
       currentQuery: value,
       currentPage: 1,
@@ -44,39 +46,50 @@ class App extends React.Component {
     this.setState({ needLoader: true });
     const { currentQuery, currentPage } = this.state;
 
-    getImages(currentQuery, currentPage).then((data) => {
-      console.log('fetchImages', this.state.needLoader);
-      this.setState((prevState) => ({
-        images: [...prevState.images, ...data],
-        currentPage: prevState.currentPage + 1,
-        needLoader: false,
-      }
-      ));
-    });
+    getImages(currentQuery, currentPage)
+      .then((data) => {
+        this.setState((prevState) => ({
+          images: [...prevState.images, ...data],
+          currentPage: prevState.currentPage + 1,
+        }));
+      })
+      .catch((error) => console.log(error))
+      .finally(this.setState({ needLoader: false }));
   };
 
   handleLoadMore = () => {
-    console.log('handleLoadMore', this.state.needLoader);
     this.fetchImages();
+  };
+
+  toggleModal = (img) => {
+    this.setState((prevState) => ({
+      showModal: !prevState.showModal,
+      modalImg: img,
+    }));
   };
 
   render() {
     const needLoadMoreBtn = this.state.images.length !== 0;
     return (
-      <Container>
-        <Searchbar onSubmit={this.handleSearchSubmit} />
-        {this.setState.needLoader && (
-          <Loader
-            type="Puff"
-            color="#00BFFF"
-            height={100}
-            width={100}
-            timeout={3000} //3 secs
-          />
+      <>
+        {this.state.showModal && (
+          <Modal currImg={this.state.modalImg} onClose={this.toggleModal} />
         )}
-        <ImageGallery images={this.state.images} />
-        {needLoadMoreBtn && <Button onLoadMore={this.handleLoadMore} />}
-      </Container>
+        <Container>
+          <Searchbar onSubmit={this.handleSearchSubmit} />
+          <ImageGallery images={this.state.images} onClick={this.toggleModal} />
+          {this.state.needLoader && (
+            <Loader
+              type="ThreeDots"
+              color="#DCDCDC"
+              height={100}
+              width={100}
+              timeout={3000} //3 secs
+            />
+          )}
+          {needLoadMoreBtn && <Button onLoadMore={this.handleLoadMore} />}
+        </Container>
+      </>
     );
   }
 }
